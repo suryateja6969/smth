@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>for you</title>
+
+  <style>
+    /* =============================================
+       RESET & ROOT VARIABLES
+    ============================================= */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:           #f7f4ef;
+      --bg-warm:      #f2ede6;
+      --bg-cool:      #eef1f5;
+      --text:         #4a4540;
+      --text-light:   #7d7570;
+      --text-faint:   #b0aaa5;
+      --accent:       #8eafc2;
+      --accent-warm:  #c4a882;
+      --accent-soft:  #a8bfcc;
+      --card:         rgba(255, 253, 250, 0.72);
+      --border:       rgba(160, 148, 138, 0.18);
+      --radius:       18px;
+      --font-body:    'Georgia', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+      --font-ui:      -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* =============================================
+       BASE & BACKGROUND
+    ============================================= */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: clamp(16px, 2.2vw, 19px);
+      line-height: 1.85;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Slow ambient gradient shift in the background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(196, 168, 130, 0.10) 0%, transparent 70%),
+        radial-gradient(ellipse 70% 50% at 80% 80%, rgba(142, 175, 194, 0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 70% at 50% 50%, rgba(168, 191, 204, 0.07) 0%, transparent 80%);
+      animation: bgPulse 18s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes bgPulse {
+      0%   { opacity: 0.6; transform: scale(1);    }
+      50%  { opacity: 1;   transform: scale(1.04); }
+      100% { opacity: 0.7; transform: scale(1.01); }
+    }
+
+    /* Subtle floating particles */
+    #particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(142,175,194,0.22), transparent 70%);
+      animation: float linear infinite;
+      will-change: transform, opacity;
+    }
+
+    @keyframes float {
+      0%   { transform: translateY(100vh) translateX(0px); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 0.6; }
+      100% { transform: translateY(-120px) translateX(30px); opacity: 0; }
+    }
+
+    /* =============================================
+       LAYOUT WRAPPER
+    ============================================= */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: clamp(40px, 8vw, 100px) clamp(22px, 5vw, 48px) 100px;
+    }
+
+    /* =============================================
+       SCROLL FADE-IN
+    ============================================= */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 1.1s ease, transform 1.1s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Staggered delays for child elements */
+    .fade-in:nth-child(2) { transition-delay: 0.12s; }
+    .fade-in:nth-child(3) { transition-delay: 0.22s; }
+
+    /* =============================================
+       SECTION BASE
+    ============================================= */
+    section {
+      margin-bottom: clamp(56px, 10vw, 96px);
+    }
+
+    /* =============================================
+       OPENING — HERO SECTION
+    ============================================= */
+    .hero {
+      min-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: clamp(30px, 6vw, 60px);
+    }
+
+    .hero .eyebrow {
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.7rem, 5vw, 2.6rem);
+      font-weight: 400;
+      line-height: 1.35;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      margin-bottom: 32px;
+    }
+
+    .hero .sub {
+      font-size: clamp(0.95rem, 2vw, 1.05rem);
+      color: var(--text-light);
+      line-height: 1.9;
+      max-width: 520px;
+    }
+
+    .hero .close-note {
+      margin-top: 48px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      color: var(--text-faint);
+      font-style: italic;
+    }
+
+    /* Divider */
+    .divider {
+      width: 36px;
+      height: 1px;
+      background: var(--border);
+      margin: clamp(40px, 6vw, 72px) 0;
+      border: none;
+    }
+
+    /* =============================================
+       SECTION TITLES
+    ============================================= */
+    .section-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 18px;
+      display: block;
+    }
+
+    h2 {
+      font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+      font-weight: 400;
+      line-height: 1.4;
+      color: var(--text);
+      margin-bottom: 20px;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      color: var(--text-light);
+      font-size: clamp(0.93rem, 2vw, 1.02rem);
+      line-height: 1.95;
+      margin-bottom: 16px;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* =============================================
+       OPTIONAL MESSAGE CARDS
+    ============================================= */
+    .optional-section {
+      margin-bottom: clamp(56px, 10vw, 96px);
+    }
+
+    .optional-section .section-label {
+      margin-bottom: 28px;
+    }
+
+    .toggle-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 24px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: clamp(0.9rem, 2vw, 0.98rem);
+      color: var(--text);
+      text-align: left;
+      width: 100%;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: background 0.35s ease, border-color 0.35s ease, transform 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(255, 253, 250, 0.9);
+      border-color: rgba(160, 148, 138, 0.32);
+      transform: translateY(-1px);
+    }
+
+    .toggle-btn:focus-visible {
+      outline: 2px solid var(--accent-soft);
+      outline-offset: 3px;
+    }
+
+    .toggle-btn .btn-icon {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.4s ease, border-color 0.3s ease;
+    }
+
+    .toggle-btn .btn-icon svg {
+      width: 10px;
+      height: 10px;
+      stroke: var(--text-faint);
+      fill: none;
+      stroke-width: 1.8;
+      transition: stroke 0.3s ease;
+    }
+
+    .toggle-btn.open .btn-icon {
+      transform: rotate(45deg);
+      border-color: var(--accent-soft);
+    }
+
+    .toggle-btn.open .btn-icon svg {
+      stroke: var(--accent);
+    }
+
+    /* Collapsible panel */
+    .collapse-panel {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
+      opacity: 0;
+    }
+
+    .collapse-panel.open {
+      max-height: 400px;
+      opacity: 1;
+    }
+
+    .collapse-inner {
+      padding: 20px 24px 24px;
+      background: rgba(255, 253, 250, 0.5);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      margin-top: -4px;
+    }
+
+    .collapse-inner p {
+      font-size: clamp(0.9rem, 1.9vw, 0.98rem);
+      color: var(--text-light);
+      line-height: 1.9;
+      margin-bottom: 10px;
+    }
+
+    /* =============================================
+       BREATHING GUIDE
+    ============================================= */
+    .breath-section {
+      text-align: center;
+      margin-bottom: clamp(56px, 10vw, 96px);
+    }
+
+    .breath-section p {
+      text-align: center;
+      max-width: 380px;
+      margin: 0 auto 40px;
+    }
+
+    .breath-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .breath-toggle {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 9px 22px;
+      cursor: pointer;
+      transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .breath-toggle:hover,
+    .breath-toggle.active {
+      color: var(--accent);
+      border-color: var(--accent-soft);
+      background: rgba(142,175,194,0.06);
+    }
+
+    .breath-toggle:focus-visible {
+      outline: 2px solid var(--accent-soft);
+      outline-offset: 3px;
+    }
+
+    .breath-area {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .breath-area.active {
+      display: flex;
+    }
+
+    /* The breathing circle */
+    .breath-circle-wrap {
+      position: relative;
+      width: 160px;
+      height: 160px;
+    }
+
+    .breath-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(142, 175, 194, 0.25);
+      animation: ringPulse 8s ease-in-out infinite;
+    }
+
+    .breath-ring:nth-child(2) {
+      animation-delay: -2.7s;
+      border-color: rgba(196, 168, 130, 0.18);
+    }
+
+    @keyframes ringPulse {
+      0%, 100% { transform: scale(0.92); opacity: 0.4; }
+      50%       { transform: scale(1.12); opacity: 0.8; }
+    }
+
+    .breath-circle {
+      position: absolute;
+      inset: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%,
+        rgba(168, 191, 204, 0.45),
+        rgba(142, 175, 194, 0.28) 60%,
+        rgba(196, 168, 130, 0.12));
+      box-shadow:
+        0 0 40px rgba(142, 175, 194, 0.22),
+        inset 0 1px 1px rgba(255,255,255,0.5);
+      animation: breathe 8s ease-in-out infinite;
+      will-change: transform, opacity;
+    }
+
+    @keyframes breathe {
+      0%   { transform: scale(0.82); opacity: 0.7; }
+      40%  { transform: scale(1);    opacity: 1;   }   /* hold in  */
+      50%  { transform: scale(1);    opacity: 1;   }
+      90%  { transform: scale(0.82); opacity: 0.7; }   /* hold out */
+      100% { transform: scale(0.82); opacity: 0.7; }
+    }
+
+    .breath-label {
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      animation: breathLabel 8s ease-in-out infinite;
+      min-height: 1.4em;
+    }
+
+    @keyframes breathLabel {
+      0%,  5%  { content: ''; }
+      0%,  38% { opacity: 0.5; }   /* breathe in */
+      10%, 48% { opacity: 1; }
+      50%, 88% { opacity: 1; }     /* breathe out */
+      95%, 100%{ opacity: 0.5; }
+    }
+
+    /* We'll update the label text via JS instead */
+
+    /* =============================================
+       CLOSING / NO-PRESSURE
+    ============================================= */
+    .closing {
+      border-top: 1px solid var(--border);
+      padding-top: clamp(40px, 7vw, 72px);
+      margin-bottom: 0;
+    }
+
+    .closing h2 {
+      font-size: clamp(1.05rem, 2.8vw, 1.35rem);
+      color: var(--text-light);
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .closing p {
+      font-size: 0.93rem;
+      color: var(--text-faint);
+      line-height: 2;
+    }
+
+    .closing .signature {
+      margin-top: 40px;
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+
+    /* =============================================
+       RESPONSIVE TWEAKS
+    ============================================= */
+    @media (max-width: 480px) {
+      .toggle-btn {
+        padding: 16px 18px;
+      }
+
+      .collapse-inner {
+        padding: 16px 18px 20px;
+      }
+    }
+
+    /* =============================================
+       REDUCED MOTION
+    ============================================= */
+    @media (prefers-reduced-motion: reduce) {
+      body::before,
+      .particle,
+      .breath-circle,
+      .breath-ring,
+      .breath-label {
+        animation: none;
+      }
+
+      .fade-in {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Floating particles -->
+  <div id="particles" aria-hidden="true"></div>
+
+  <main class="page" role="main">
+
+    <!-- ==========================================
+         SECTION 1 — OPENING
+    =========================================== -->
+    <section class="hero fade-in" aria-labelledby="hero-heading">
+      <span class="eyebrow">for you</span>
+
+      <h1 id="hero-heading">
+        You don't have to respond<br>to anything here.
+      </h1>
+
+      <p class="sub">
+        This is just here, quietly — in case you feel like reading.
+        No expectations, no agenda. Just a few words left for you.
+      </p>
+
+      <p class="close-note">You can close this anytime. It'll still be here.</p>
+    </section>
+
+    <hr class="divider fade-in" role="presentation" />
+
+    <!-- ==========================================
+         SECTION 2 — SPACE IS OKAY
+    =========================================== -->
+    <section class="fade-in" aria-labelledby="space-heading">
+      <span class="section-label" aria-hidden="true">on needing space</span>
+
+      <h2 id="space-heading">It's okay to need space.</h2>
+
+      <p>
+        Wanting to be alone isn't something that needs to be explained or
+        justified. It doesn't mean something is wrong with you. Sometimes
+        pulling back is exactly what you need, and that's a valid thing to do.
+      </p>
+
+      <p>
+        This isn't an attempt to pull you out of that space. You're allowed
+        to stay in it for as long as you need. There's no clock running here.
+      </p>
+
+      <p>
+        Silence can be its own kind of rest.
+      </p>
+    </section>
+
+    <hr class="divider fade-in" role="presentation" />
+
+    <!-- ==========================================
+         SECTION 3 — NOT MISUNDERSTOOD HERE
+    =========================================== -->
+    <section class="fade-in" aria-labelledby="understood-heading">
+      <span class="section-label" aria-hidden="true">on being misunderstood</span>
+
+      <h2 id="understood-heading">You're not misunderstood here.</h2>
+
+      <p>
+        When the people around you don't quite understand what you're going
+        through, that's one of the lonelier feelings there is. It's not
+        dramatic to feel it. It's just honest.
+      </p>
+
+      <p>
+        Some things are genuinely hard to put into words. And some things
+        are real even when no one else seems to see them clearly yet.
+        That doesn't make your experience any less true.
+      </p>
+
+      <p>
+        You don't have to convince anyone of how you're feeling right now.
+        Not even me.
+      </p>
+    </section>
+
+    <hr class="divider fade-in" role="presentation" />
+
+    <!-- ==========================================
+         SECTION 4 — OPTIONAL MESSAGES
+    =========================================== -->
+    <section class="optional-section fade-in" aria-labelledby="optional-label">
+      <span class="section-label" id="optional-label">a few quiet things — open if you want</span>
+
+      <div class="toggle-group" role="list">
+
+        <!-- Card 1 -->
+        <div role="listitem">
+          <button
+            class="toggle-btn"
+            aria-expanded="false"
+            aria-controls="panel-heavy"
+            id="btn-heavy">
+            If today feels heavy
+            <span class="btn-icon" aria-hidden="true">
+              <svg viewBox="0 0 12 12"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg>
+            </span>
+          </button>
+          <div class="collapse-panel" id="panel-heavy" role="region" aria-labelledby="btn-heavy">
+            <div class="collapse-inner">
+              <p>
+                Heavy days are real. They don't always have a clear reason,
+                and they don't need one. You're not obligated to feel lighter
+                than you do, or to pretend that you do.
+              </p>
+              <p>
+                If getting through today is all you manage — that counts.
+                That's enough.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div role="listitem">
+          <button
+            class="toggle-btn"
+            aria-expanded="false"
+            aria-controls="panel-alone"
+            id="btn-alone">
+            If you're feeling alone
+            <span class="btn-icon" aria-hidden="true">
+              <svg viewBox="0 0 12 12"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg>
+            </span>
+          </button>
+          <div class="collapse-panel" id="panel-alone" role="region" aria-labelledby="btn-alone">
+            <div class="collapse-inner">
+              <p>
+                Feeling alone even around people is one of the stranger
+                kinds of loneliness. It doesn't mean you're broken or
+                that it'll always be this way — it just means right now,
+                connection feels far away.
+              </p>
+              <p>
+                You don't have to reach out or explain yourself to anyone.
+                But for what it's worth — even from a distance, you're
+                thought of.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div role="listitem">
+          <button
+            class="toggle-btn"
+            aria-expanded="false"
+            aria-controls="panel-frustrated"
+            id="btn-frustrated">
+            If you're frustrated with people
+            <span class="btn-icon" aria-hidden="true">
+              <svg viewBox="0 0 12 12"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg>
+            </span>
+          </button>
+          <div class="collapse-panel" id="panel-frustrated" role="region" aria-labelledby="btn-frustrated">
+            <div class="collapse-inner">
+              <p>
+                Sometimes people say well-meaning things that land wrong, or
+                miss the point entirely, or make it somehow about them.
+                That's genuinely frustrating, and you don't have to
+                smooth it over right now.
+              </p>
+              <p>
+                You're allowed to be tired of explaining. You're allowed
+                to just … not, for a while.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <hr class="divider fade-in" role="presentation" />
+
+    <!-- ==========================================
+         SECTION 5 — BREATHING GUIDE
+    =========================================== -->
+    <section class="breath-section fade-in" aria-labelledby="breath-heading">
+      <span class="section-label" aria-hidden="true">if you want a moment to settle</span>
+
+      <h2 id="breath-heading">A quiet pause, if you'd like one.</h2>
+
+      <p>
+        Just a slow breath. Entirely optional — press start whenever, or skip it altogether.
+      </p>
+
+      <div class="breath-wrapper">
+        <button
+          class="breath-toggle"
+          id="breathToggle"
+          aria-pressed="false">
+          Start breathing guide
+        </button>
+
+        <div
+          class="breath-area"
+          id="breathArea"
+          aria-live="polite"
+          aria-atomic="true">
+
+          <div class="breath-circle-wrap" aria-hidden="true">
+            <div class="breath-ring"></div>
+            <div class="breath-ring"></div>
+            <div class="breath-circle" id="breathCircle"></div>
+          </div>
+
+          <p class="breath-label" id="breathLabel" aria-live="polite">breathe in</p>
+
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider fade-in" role="presentation" />
+
+    <!-- ==========================================
+         SECTION 6 — CLOSING / NO PRESSURE
+    =========================================== -->
+    <section class="closing fade-in" aria-labelledby="closing-heading">
+      <span class="section-label" aria-hidden="true">just so you know</span>
+
+      <h2 id="closing-heading">No reply needed. Ever.</h2>
+
+      <p>
+        There's nothing to respond to here. No check-ins. No follow-ups.
+        No quietly waiting to hear from you. Just this page, sitting
+        still whenever you come back to it.
+      </p>
+
+      <p>
+        You can take all the space you need. Time isn't being counted.
+        And none of this comes with conditions.
+      </p>
+
+      <p>
+        Whenever — and if ever — things feel a little lighter,
+        I'll just be around. Quietly.
+      </p>
+
+      <p class="signature">— a friend</p>
+    </section>
+
+  </main>
+
+  <script>
+    /* =============================================
+       PARTICLES
+    ============================================= */
+    (function createParticles() {
+      const container = document.getElementById('particles');
+      const count = 8;
+
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+
+        const size = 60 + Math.random() * 140;
+        const left = Math.random() * 100;
+        const dur  = 28 + Math.random() * 24;
+        const del  = Math.random() * -dur; // start at random phase
+
+        p.style.cssText = `
+          width: ${size}px;
+          height: ${size}px;
+          left: ${left}%;
+          animation-duration: ${dur}s;
+          animation-delay: ${del}s;
+        `;
+
+        container.appendChild(p);
+      }
+    })();
+
+    /* =============================================
+       SCROLL FADE-IN (IntersectionObserver)
+    ============================================= */
+    (function setupFadeIn() {
+      const els = document.querySelectorAll('.fade-in');
+
+      if (!window.IntersectionObserver) {
+        // Fallback: just show everything
+        els.forEach(el => el.classList.add('visible'));
+        return;
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+      els.forEach(el => observer.observe(el));
+    })();
+
+    /* =============================================
+       COLLAPSIBLE OPTIONAL MESSAGES
+    ============================================= */
+    (function setupToggles() {
+      const buttons = document.querySelectorAll('.toggle-btn');
+
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const panelId = btn.getAttribute('aria-controls');
+          const panel   = document.getElementById(panelId);
+          const isOpen  = btn.classList.contains('open');
+
+          // Close all panels first
+          buttons.forEach(b => {
+            const pid = b.getAttribute('aria-controls');
+            const pnl = document.getElementById(pid);
+            b.classList.remove('open');
+            b.setAttribute('aria-expanded', 'false');
+            pnl.classList.remove('open');
+          });
+
+          // If this one was closed, open it
+          if (!isOpen) {
+            btn.classList.add('open');
+            btn.setAttribute('aria-expanded', 'true');
+            panel.classList.add('open');
+          }
+        });
+      });
+    })();
+
+    /* =============================================
+       BREATHING GUIDE
+    ============================================= */
+    (function setupBreathing() {
+      const toggle    = document.getElementById('breathToggle');
+      const area      = document.getElementById('breathArea');
+      const label     = document.getElementById('breathLabel');
+
+      let active      = false;
+      let interval    = null;
+      let phase       = 0; // 0=in, 1=hold-in, 2=out, 3=hold-out
+      let tick        = 0;
+
+      // Cycle: 4s in, 2s hold, 4s out, 2s hold  = 12s total (but we use 8s CSS anim)
+      // We'll keep it simple: 4s breathe in, 4s breathe out, with soft labels
+      const phases = [
+        { label: 'breathe in',  duration: 4000 },
+        { label: 'hold',        duration: 1500 },
+        { label: 'breathe out', duration: 4000 },
+        { label: 'rest',        duration: 1500 },
+      ];
+
+      function nextPhase() {
+        phase = (phase + 1) % phases.length;
+        label.textContent = phases[phase].label;
+        interval = setTimeout(nextPhase, phases[phase].duration);
+      }
+
+      function start() {
+        active = true;
+        toggle.textContent = 'Pause';
+        toggle.setAttribute('aria-pressed', 'true');
+        area.classList.add('active');
+
+        phase = 0;
+        label.textContent = phases[0].label;
+        interval = setTimeout(nextPhase, phases[0].duration);
+      }
+
+      function stop() {
+        active = false;
+        toggle.textContent = 'Start breathing guide';
+        toggle.setAttribute('aria-pressed', 'false');
+        area.classList.remove('active');
+        clearTimeout(interval);
+        label.textContent = 'breathe in';
+      }
+
+      toggle.addEventListener('click', () => {
+        toggle.classList.toggle('active', !active);
+        if (!active) { start(); } else { stop(); }
+      });
+    })();
+  </script>
+</body>
+</html>
